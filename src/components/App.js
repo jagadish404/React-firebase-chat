@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
-import firebase from 'firebase';
+import { initializeApp, database } from 'firebase';
 import '../css/index.css';
-import Logo from '../img/logo.png';
 
 // Initialize Firebase
 var config = {
@@ -12,17 +11,19 @@ var config = {
   storageBucket: BUCKET,
   messagingSenderId: SENDERID
 };
-firebase.initializeApp(config);
+initializeApp(config);
 
-var chatRef = firebase.database().ref().child('chats');
+var chatRef = database().ref().child('chats');
 
 export class App extends Component {
   constructor(props) {
     super(props);
-    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleMessage = this.handleMessage.bind(this);
     this.handleNameChange = this.handleNameChange.bind(this);
     this.scrollChatToBottom = this.scrollChatToBottom.bind(this);
     this.clearChat = this.clearChat.bind(this);
+    this.handleUserNameKeyDown = this.handleOnKeyDown.bind(this, this.handleNameChange);
+    this.handleMessageNameKeyDown = this.handleOnKeyDown.bind(this, this.handleMessage);
     this.state = {
       messages: [],
       userName: 'Anonymous'
@@ -69,7 +70,7 @@ export class App extends Component {
     this.inputUser.value = '';
   }
 
-  handleSubmit() {
+  handleMessage() {
     const msg = this.inputMsg.value;
     const { userName } = this.state;
 
@@ -81,8 +82,6 @@ export class App extends Component {
   }
 
   scrollChatToBottom() {
-    console.log(this.panel.scrollHeight);
-    console.log(this.panel.clientHeight);
     setTimeout(() => {
       this.panel.scrollTo(0, 682);      
     }, 500);
@@ -94,14 +93,27 @@ export class App extends Component {
     return (
       <div className="App-wrapper">
         <div className="App-header">
-          <img id="App-logo" src={Logo} alt="Logo" />
-          <div className="user-name">
-            Username: <b>{userName}</b>
-          </div>
-          <div className="input-group user-name-row">
-            <input ref={el => this.inputUser = el} className="form-control" onKeyPress={this.handleOnKeyDown.bind(this, this.handleNameChange)} />
-            <div className="input-group-append">
-              <button className="btn btn-secondary" type="button" onClick={this.handleNameChange.bind(this)}>Change name</button>
+          <div className="grid">
+            <div className="row">
+              <div className="col-xs-9">
+                <h2>React chat app</h2>
+                <div className="input-group user-name-row">
+                  <input
+                    ref={el => this.inputUser = el}
+                    className="form-control"
+                    placeholder="Type your name"
+                    onKeyPress={this.handleUserNameKeyDown}
+                  />
+                  <div className="input-group-btn">
+                    <button className="btn btn-default" type="button" onClick={this.handleNameChange}>Change name</button>
+                  </div>
+                </div>
+              </div>
+              <div className="col-xs-3">
+                <div className="user-name">
+                  Username: <b>{userName}</b>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -112,11 +124,16 @@ export class App extends Component {
             }
           </ul>
         </div>
-        <div className="input-group App-footer mb-3">
-          <input ref={el => this.inputMsg = el} className="form-control" onKeyPress={this.handleOnKeyDown.bind(this, this.handleSubmit)} />
-          <div className="input-group-append">
-            <button className="btn btn-success" type="button" onClick={this.handleSubmit}>Send</button>
-            <button className="btn btn-danger" type="button" onClick={this.clearChat}>Clear</button>
+        <div id="App-footer" className="input-group">
+          <input
+            ref={el => this.inputMsg = el}
+            className="form-control"
+            placeholder="Type your message"
+            onKeyPress={this.handleMessageNameKeyDown}
+          />
+          <div className="input-group-btn">
+            <button className="btn btn-default" type="button" onClick={this.handleMessage}>Send</button>
+            <button className="btn btn-default" type="button" onClick={this.clearChat}>Clear</button>
           </div>
         </div>
       </div>
